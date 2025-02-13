@@ -12,7 +12,7 @@ This project provides an integration for the Axeos Miner, allowing users to moni
 
 1. Clone this repository to your Home Assistant `custom_components` directory:
    ```
-   git clone https://github.com/yourusername/axeos_miner_integration.git
+   git clone https://github.com/Loony2392/hacs_axeos_miner.git
    ```
 
 2. Restart Home Assistant to load the new integration.
