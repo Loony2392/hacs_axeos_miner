@@ -1,11 +1,12 @@
 {
   "domain": "axeos_miner",
-  "name": "Axeos Miner Integration",
+  "name": "Axeos Miner",
   "version": "1.0.0",
-  "documentation": "https://github.com/loony2392/hacs_axeos_miner",
+  "documentation": "https://github.com/Loony2392/hacs_axeos_miner",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@loony2392"],
+  "codeowners": ["@Loony2392"],
+  "config_flow": false,
   "iot_class": "local_polling",
-  "integration_type": "hub"
+  "translations": ["en", "de", "fr"]
 }
