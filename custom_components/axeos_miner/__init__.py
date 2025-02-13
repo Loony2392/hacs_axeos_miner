@@ -1,7 +1,8 @@
 # This file initializes the package and contains the basic setup logic for the integration.
 # It registers the integration and implements the main logic for communication with the Axeos Miner API.
 
-from homeassistant import ConfigEntry, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 
 DOMAIN = "axeos_miner"
