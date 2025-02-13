@@ -35,6 +35,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = await hass.async_add_executor_job(fetch_sensors, host)
     async_add_entities(sensors, True)
 
+async def async_unload_entry(hass, entry):
+    """Unload Axeos Miner sensors based on a config entry."""
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+
 def fetch_sensors(host):
     """Fetch sensor data from the Axeos Miner API and create sensor entities."""
     try:
