@@ -1,0 +1,13 @@
+{
+  "name": "Axeos Miner",
+  "content_in_root": false,
+  "domains": ["sensor"],
+  "country": "DE",
+  "homeassistant": "2021.1.5",
+  "render_readme": true,
+  "zip_release": false,
+  "filename": "custom_components/axeos_miner",
+  "iot_class": "Local Polling",
+  "integration_type": "integration",
+  "issue_tracker": "https://github.com/Loony2392/hacs_axeos_miner/issues"
+}
