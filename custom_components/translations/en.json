@@ -6,8 +6,7 @@
         "title": "Configure Axeos Miner",
         "description": "Set up the Axeos Miner integration.",
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "host": "Host"
         }
       }
     },
