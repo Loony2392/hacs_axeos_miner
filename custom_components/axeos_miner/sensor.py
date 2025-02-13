@@ -17,8 +17,8 @@ API_URL_TEMPLATE = "http://{}/api/system/info"
 
 SENSOR_TYPES = {
     "power": ["Power", UnitOfPower.WATT, "mdi:flash"],
-    "voltage": ["Voltage", UnitOfElectricPotential.VOLT, "mdi:flash"],
-    "current": ["Current", UnitOfElectricCurrent.AMPERE, "mdi:current-ac"],
+    "voltage": ["Voltage", "mV", "mdi:flash"],
+    "current": ["Current", "mA", "mdi:current-ac"],
     "temp": ["Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
     "vrTemp": ["VR Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
     "hashRate": ["Hash Rate", "MH/s", "mdi:chart-line"],
@@ -126,6 +126,23 @@ class AxeosMinerSensor(SensorEntity):
     def scan_interval(self):
         """Return the scan interval."""
         return self._scan_interval
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return "measurement"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        if isinstance(self._state, (int, float)):
+            return round(self._state, 2)  # Runde auf 2 Nachkommastellen
+        return self._state
 
     def update(self):
         """Fetch new state data for the sensor."""
