@@ -16,6 +16,7 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema({
             vol.Required("host"): str,
+            vol.Optional("scan_interval", default=60): int,  # Scan-Intervall in Sekunden
         })
 
         return self.async_show_form(

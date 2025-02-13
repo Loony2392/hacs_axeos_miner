@@ -24,7 +24,7 @@ SENSOR_TYPES = {
     "hashRate": ["Hash Rate", UnitOfInformation.MEGABITS, "mdi:chart-line"],
     "frequency": ["Frequency", UnitOfFrequency.HERTZ, "mdi:wave"],
     "fanspeed": ["Fan Speed", PERCENTAGE, "mdi:fan"],
-    "fanrpm": ["Fan RPM", "rpm", "mdi:fan"],
+    "fanrpm": ["Fan RPM", "mdi:fan"],
     "uptimeSeconds": ["Uptime", UnitOfTime.SECONDS, "mdi:clock"],
     "freeHeap": ["Free Heap", "bytes", "mdi:memory"],
     "coreVoltage": ["Core Voltage", UnitOfElectricPotential.VOLT, "mdi:flash"],
@@ -60,27 +60,28 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Axeos Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
-    sensors = await hass.async_add_executor_job(fetch_sensors, host)
+    scan_interval = entry.data.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
+    sensors = await hass.async_add_executor_job(fetch_sensors, host, scan_interval)
     async_add_entities(sensors, True)
 
 async def async_unload_entry(hass, entry):
     """Unload Axeos Miner sensors based on a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
-def fetch_sensors(host):
+def fetch_sensors(host, scan_interval):
     """Fetch sensor data from the Axeos Miner API and create sensor entities."""
     try:
         response = requests.get(API_URL_TEMPLATE.format(host))
         response.raise_for_status()
         data = response.json()
-        return [AxeosMinerSensor(host, key, value) for key, value in data.items() if key in SENSOR_TYPES]
+        return [AxeosMinerSensor(host, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
     except requests.exceptions.RequestException as e:
-        return [AxeosMinerSensor(host, "error", f"Error: {e}")]
+        return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
 
 class AxeosMinerSensor(SensorEntity):
     """Representation of an Axeos Miner sensor."""
 
-    def __init__(self, host, key, initial_state):
+    def __init__(self, host, key, initial_state, scan_interval):
         """Initialize the sensor."""
         self._host = host
         self._key = key
@@ -89,6 +90,7 @@ class AxeosMinerSensor(SensorEntity):
         self._unit = SENSOR_TYPES[key][1]
         self._icon = SENSOR_TYPES[key][2]
         self._unique_id = f"{host}_{key}"
+        self._scan_interval = scan_interval
 
     @property
     def name(self):
@@ -114,6 +116,16 @@ class AxeosMinerSensor(SensorEntity):
     def unique_id(self):
         """Return a unique ID for the sensor."""
         return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return True
+
+    @property
+    def scan_interval(self):
+        """Return the scan interval."""
+        return self._scan_interval
 
     def update(self):
         """Fetch new state data for the sensor."""

@@ -3,13 +3,19 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+import logging
+import requests
 
 DOMAIN = "axeos_miner"
+VERSION = "1.0.0"  # Aktuelle Version der Integration
+UPDATE_URL = "https://api.github.com/repos/Loony2392/hacs_axeos_miner/releases/latest"
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Axeos Miner integration."""
     hass.data[DOMAIN] = {}
+    await check_for_updates(hass)
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -26,3 +32,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+async def check_for_updates(hass: HomeAssistant):
+    """Check if there is a new version of the integration available."""
+    try:
+        response = requests.get(UPDATE_URL)
+        response.raise_for_status()
+        latest_release = response.json()
+        latest_version = latest_release["tag_name"]
+
+        if VERSION < latest_version:
+            _LOGGER.warning(
+                "A new version of Axeos Miner integration is available: %s. You are currently using version: %s",
+                latest_version,
+                VERSION,
+            )
+    except requests.exceptions.RequestException as e:
+        _LOGGER.error("Error checking for updates: %s", e)
