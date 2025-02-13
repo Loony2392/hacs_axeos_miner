@@ -1,6 +1,7 @@
 from homeassistant import config_entries
 import voluptuous as vol
 from .const import DOMAIN
+import aiohttp
 
 class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Axeos Miner."""
@@ -12,16 +13,30 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="Axeos Miner", data=user_input)
+            host = user_input["host"]
+            # Hier kannst du eine Funktion hinzufügen, um den Hostnamen vom Gerät abzurufen
+            hostname = await self.fetch_hostname(host)
+            return self.async_create_entry(title=hostname, data=user_input)
 
         data_schema = vol.Schema({
             vol.Required("host"): str,
-            vol.Optional("scan_interval", default=15): int,  # Scan-Intervall in Sekunden
+            vol.Optional("scan_interval", default=60): int,  # Scan-Intervall in Sekunden
         })
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
+    async def fetch_hostname(self, host):
+        """Fetch the hostname from the device."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://{host}/api/system/info") as response:
+                    response.raise_for_status()
+                    data = await response.json()
+                    return data.get("hostname", host)
+        except aiohttp.ClientError:
+            return host
 
     async def async_step_options(self, user_input=None):
         """Handle the options step."""
@@ -29,7 +44,7 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = vol.Schema({
-            vol.Optional("scan_interval", default=15): int,  # Scan-Intervall in Sekunden
+            vol.Optional("scan_interval", default=60): int,  # Scan-Intervall in Sekunden
         })
 
         return self.async_show_form(
@@ -52,7 +67,7 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="", data=self.config_entry.options)
 
             options_schema = vol.Schema({
-                vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", 15)): int,
+                vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", 60)): int,
             })
 
             return self.async_show_form(
