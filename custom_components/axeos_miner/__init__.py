@@ -15,12 +15,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Axeos Miner."""
     hass.data[DOMAIN][entry.entry_id] = entry.data
-    await discovery.async_load_platform(hass, "sensor", DOMAIN, {}, entry)
+    await hass.async_add_executor_job(discovery.load_platform, hass, "sensor", DOMAIN, {}, entry)
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await discovery.async_unload_platform(hass, "sensor", entry)
+    unload_ok = await hass.async_add_executor_job(discovery.unload_platform, hass, "sensor", entry)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
