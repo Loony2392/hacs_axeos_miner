@@ -2,30 +2,30 @@ import requests
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_HOST,
-    POWER_WATT,
-    ELECTRIC_POTENTIAL_VOLT,
-    ELECTRIC_CURRENT_AMPERE,
-    TEMP_CELSIUS,
-    FREQUENCY_HERTZ,
+    UnitOfPower,
+    UnitOfElectricPotential,
+    UnitOfElectricCurrent,
+    UnitOfTemperature,
+    UnitOfFrequency,
     PERCENTAGE,
-    DATA_RATE_MEGABITS_PER_SECOND,
-    TIME_SECONDS,
+    UnitOfInformation,
+    UnitOfTime,
 )
 from .const import DOMAIN
 
 API_URL_TEMPLATE = "http://{}/api/system/info"
 
 SENSOR_TYPES = {
-    "power": ["Power", POWER_WATT],
-    "voltage": ["Voltage", ELECTRIC_POTENTIAL_VOLT],
-    "current": ["Current", ELECTRIC_CURRENT_AMPERE],
-    "temp": ["Temperature", TEMP_CELSIUS],
-    "vrTemp": ["VR Temperature", TEMP_CELSIUS],
-    "hashRate": ["Hash Rate", DATA_RATE_MEGABITS_PER_SECOND],
-    "frequency": ["Frequency", FREQUENCY_HERTZ],
+    "power": ["Power", UnitOfPower.WATT],
+    "voltage": ["Voltage", UnitOfElectricPotential.VOLT],
+    "current": ["Current", UnitOfElectricCurrent.AMPERE],
+    "temp": ["Temperature", UnitOfTemperature.CELSIUS],
+    "vrTemp": ["VR Temperature", UnitOfTemperature.CELSIUS],
+    "hashRate": ["Hash Rate", UnitOfInformation.MEGABITS],
+    "frequency": ["Frequency", UnitOfFrequency.HERTZ],
     "fanspeed": ["Fan Speed", PERCENTAGE],
     "fanrpm": ["Fan RPM", "rpm"],
-    "uptimeSeconds": ["Uptime", TIME_SECONDS],
+    "uptimeSeconds": ["Uptime", UnitOfTime.SECONDS],
     # Add other sensor types as needed
 }
 
