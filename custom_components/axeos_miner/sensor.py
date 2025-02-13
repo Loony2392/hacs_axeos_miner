@@ -16,16 +16,44 @@ from .const import DOMAIN
 API_URL_TEMPLATE = "http://{}/api/system/info"
 
 SENSOR_TYPES = {
-    "power": ["Power", UnitOfPower.WATT],
-    "voltage": ["Voltage", UnitOfElectricPotential.VOLT],
-    "current": ["Current", UnitOfElectricCurrent.AMPERE],
-    "temp": ["Temperature", UnitOfTemperature.CELSIUS],
-    "vrTemp": ["VR Temperature", UnitOfTemperature.CELSIUS],
-    "hashRate": ["Hash Rate", UnitOfInformation.MEGABITS],
-    "frequency": ["Frequency", UnitOfFrequency.HERTZ],
-    "fanspeed": ["Fan Speed", PERCENTAGE],
-    "fanrpm": ["Fan RPM", "rpm"],
-    "uptimeSeconds": ["Uptime", UnitOfTime.SECONDS],
+    "power": ["Power", UnitOfPower.WATT, "mdi:flash"],
+    "voltage": ["Voltage", UnitOfElectricPotential.VOLT, "mdi:flash"],
+    "current": ["Current", UnitOfElectricCurrent.AMPERE, "mdi:current-ac"],
+    "temp": ["Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
+    "vrTemp": ["VR Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
+    "hashRate": ["Hash Rate", UnitOfInformation.MEGABITS, "mdi:chart-line"],
+    "frequency": ["Frequency", UnitOfFrequency.HERTZ, "mdi:wave"],
+    "fanspeed": ["Fan Speed", PERCENTAGE, "mdi:fan"],
+    "fanrpm": ["Fan RPM", "rpm", "mdi:fan"],
+    "uptimeSeconds": ["Uptime", UnitOfTime.SECONDS, "mdi:clock"],
+    "freeHeap": ["Free Heap", "bytes", "mdi:memory"],
+    "coreVoltage": ["Core Voltage", UnitOfElectricPotential.VOLT, "mdi:flash"],
+    "coreVoltageActual": ["Core Voltage Actual", UnitOfElectricPotential.VOLT, "mdi:flash"],
+    "ssid": ["SSID", None, "mdi:wifi"],
+    "macAddr": ["MAC Address", None, "mdi:network"],
+    "hostname": ["Hostname", None, "mdi:server"],
+    "wifiStatus": ["WiFi Status", None, "mdi:wifi"],
+    "sharesAccepted": ["Shares Accepted", None, "mdi:check"],
+    "sharesRejected": ["Shares Rejected", None, "mdi:close"],
+    "asicCount": ["ASIC Count", None, "mdi:chip"],
+    "smallCoreCount": ["Small Core Count", None, "mdi:chip"],
+    "ASICModel": ["ASIC Model", None, "mdi:chip"],
+    "stratumURL": ["Stratum URL", None, "mdi:link"],
+    "fallbackStratumURL": ["Fallback Stratum URL", None, "mdi:link"],
+    "stratumPort": ["Stratum Port", None, "mdi:link"],
+    "fallbackStratumPort": ["Fallback Stratum Port", None, "mdi:link"],
+    "stratumUser": ["Stratum User", None, "mdi:account"],
+    "fallbackStratumUser": ["Fallback Stratum User", None, "mdi:account"],
+    "version": ["Version", None, "mdi:information"],
+    "idfVersion": ["IDF Version", None, "mdi:information"],
+    "boardVersion": ["Board Version", None, "mdi:information"],
+    "runningPartition": ["Running Partition", None, "mdi:information"],
+    "flipscreen": ["Flip Screen", None, "mdi:rotate-3d"],
+    "overheat_mode": ["Overheat Mode", None, "mdi:thermometer-alert"],
+    "invertscreen": ["Invert Screen", None, "mdi:rotate-3d"],
+    "invertfanpolarity": ["Invert Fan Polarity", None, "mdi:fan"],
+    "autofanspeed": ["Auto Fan Speed", None, "mdi:fan"],
+    "fanrpm": ["Fan RPM", "rpm", "mdi:fan"],
     # Add other sensor types as needed
 }
 
@@ -59,6 +87,7 @@ class AxeosMinerSensor(SensorEntity):
         self._name = f"Axeos Miner {SENSOR_TYPES[key][0]}"
         self._state = initial_state
         self._unit = SENSOR_TYPES[key][1]
+        self._icon = SENSOR_TYPES[key][2]
         self._unique_id = f"{host}_{key}"
 
     @property
@@ -75,6 +104,11 @@ class AxeosMinerSensor(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return self._unit
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def unique_id(self):
