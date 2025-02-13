@@ -1,40 +1,40 @@
-from homeassistant.helpers.entity import Entity
 import requests
-from .const import API_URL
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_HOST
+from .const import DOMAIN
 
-class AxeosMinerSensor(Entity):
-    def __init__(self, name, sensor_type):
-        self._name = name
-        self._sensor_type = sensor_type
+API_URL_TEMPLATE = "http://{}/api/system/info"
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Axeos Miner sensor based on a config entry."""
+    host = entry.data[CONF_HOST]
+    async_add_entities([AxeosMinerSensor(host)], True)
+
+class AxeosMinerSensor(SensorEntity):
+    """Representation of an Axeos Miner sensor."""
+
+    def __init__(self, host):
+        """Initialize the sensor."""
+        self._host = host
         self._state = None
+        self._name = "Axeos Miner Sensor"
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._state
 
-    @property
-    def unique_id(self):
-        return f"{self._name}_{self._sensor_type}"
-
     def update(self):
+        """Fetch new state data for the sensor."""
         try:
-            response = requests.get(f"{API_URL}/system/info")
+            response = requests.get(API_URL_TEMPLATE.format(self._host))
+            response.raise_for_status()
             data = response.json()
-            self._state = data.get(self._sensor_type)
-        except Exception as e:
-            self._state = None
-            # Log the error if needed
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    response = requests.get(f"{API_URL}/system/info")
-    data = response.json()
-    
-    sensors = []
-    for key in data.keys():
-        sensors.append(AxeosMinerSensor(f"Axeos Miner {key.replace('_', ' ').title()}", key))
-    
-    add_entities(sensors, True)
+            self._state = data.get("state", "unknown")
+        except requests.exceptions.RequestException as e:
+            self._state = f"Error: {e}"
