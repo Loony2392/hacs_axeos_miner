@@ -38,19 +38,6 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError:
             return host
 
-    async def async_step_options(self, user_input=None):
-        """Handle the options step."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options_schema = vol.Schema({
-            vol.Optional("scan_interval", default=60): int,  # Scan-Intervall in Sekunden
-        })
-
-        return self.async_show_form(
-            step_id="options", data_schema=options_schema
-        )
-
     @staticmethod
     @config_entries.HANDLERS.register(DOMAIN)
     class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
