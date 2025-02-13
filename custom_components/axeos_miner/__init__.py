@@ -4,7 +4,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import logging
-import requests
+import aiohttp
 
 DOMAIN = "axeos_miner"
 VERSION = "1.0.0"  # Aktuelle Version der Integration
@@ -35,17 +35,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def check_for_updates(hass: HomeAssistant):
     """Check if there is a new version of the integration available."""
-    try:
-        response = requests.get(UPDATE_URL)
-        response.raise_for_status()
-        latest_release = response.json()
-        latest_version = latest_release["tag_name"]
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(UPDATE_URL) as response:
+                response.raise_for_status()
+                latest_release = await response.json()
+                latest_version = latest_release["tag_name"]
 
-        if VERSION < latest_version:
-            _LOGGER.warning(
-                "A new version of Axeos Miner integration is available: %s. You are currently using version: %s",
-                latest_version,
-                VERSION,
-            )
-    except requests.exceptions.RequestException as e:
-        _LOGGER.error("Error checking for updates: %s", e)
+                if VERSION < latest_version:
+                    _LOGGER.warning(
+                        "A new version of Axeos Miner integration is available: %s. You are currently using version: %s",
+                        latest_version,
+                        VERSION,
+                    )
+        except aiohttp.ClientError as e:
+            _LOGGER.error("Error checking for updates: %s", e)
