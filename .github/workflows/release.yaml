@@ -4,46 +4,47 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
   bump-version:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: 🛎️ Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
+    - name: 🐍 Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.9'
 
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install bump2version
 
-    - name: Bump version
+    - name: 🔢 Bump version
       run: |
         bump2version patch --allow-dirty
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-    - name: Push changes
+    - name: 📤 Push changes
       run: |
         git push --follow-tags
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   create-release:
     needs: bump-version
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: 🛎️ Checkout code
       uses: actions/checkout@v2
 
-    - name: Create Release
+    - name: 📦 Create Release
       uses: actions/create-release@v1
       with:
         tag_name: ${{ github.ref }}
@@ -54,4 +55,4 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
