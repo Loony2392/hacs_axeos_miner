@@ -11,6 +11,9 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTime,
 )
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 
 API_URL_TEMPLATE = "http://{}/api/system/info"
@@ -60,7 +63,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Axeos Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
-    scan_interval = entry.data.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
+    scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
     sensors = await hass.async_add_executor_job(fetch_sensors, host, scan_interval)
     async_add_entities(sensors, True)
 
@@ -74,22 +77,24 @@ def fetch_sensors(host, scan_interval):
         response = requests.get(API_URL_TEMPLATE.format(host))
         response.raise_for_status()
         data = response.json()
-        return [AxeosMinerSensor(host, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+        hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
+        return [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
     except requests.exceptions.RequestException as e:
         return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
 
 class AxeosMinerSensor(SensorEntity):
     """Representation of an Axeos Miner sensor."""
 
-    def __init__(self, host, key, initial_state, scan_interval):
+    def __init__(self, hostname, key, initial_state, scan_interval):
         """Initialize the sensor."""
-        self._host = host
+        self._hostname = hostname
         self._key = key
-        self._name = f"Axeos Miner {SENSOR_TYPES[key][0]}"
+        self._name = f"{hostname} {SENSOR_TYPES[key][0]}"
         self._state = initial_state
         self._unit = SENSOR_TYPES[key][1]
         self._icon = SENSOR_TYPES[key][2]
-        self._unique_id = f"{host}_{key}"
+        self._device_class = SENSOR_TYPES[key][3]
+        self._unique_id = f"{hostname}_{key}"
         self._scan_interval = scan_interval
 
     @property
@@ -147,7 +152,7 @@ class AxeosMinerSensor(SensorEntity):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            response = requests.get(API_URL_TEMPLATE.format(self._host))
+            response = requests.get(API_URL_TEMPLATE.format(self._hostname))
             response.raise_for_status()
             data = response.json()
             self._state = data.get(self._key, "unknown")
