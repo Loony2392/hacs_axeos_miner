@@ -1,7 +1,7 @@
 from homeassistant import config_entries
 import voluptuous as vol
-from .const import DOMAIN
 import aiohttp
+from .const import DOMAIN
 
 class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Axeos Miner."""
