@@ -21,7 +21,7 @@ SENSOR_TYPES = {
     "current": ["Current", UnitOfElectricCurrent.AMPERE, "mdi:current-ac"],
     "temp": ["Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
     "vrTemp": ["VR Temperature", UnitOfTemperature.CELSIUS, "mdi:thermometer"],
-    "hashRate": ["Hash Rate", UnitOfInformation.MEGABITS, "mdi:chart-line"],
+    "hashRate": ["Hash Rate", "MH/s", "mdi:chart-line"],
     "frequency": ["Frequency", UnitOfFrequency.HERTZ, "mdi:wave"],
     "fanspeed": ["Fan Speed", PERCENTAGE, "mdi:fan"],
     "fanrpm": ["Fan RPM", "mdi:fan"],
