@@ -1,0 +1,29 @@
+{
+  "title": "Axeos Miner",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Axeos Miner konfigurieren",
+        "description": "Richte die Axeos Miner-Integration ein.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Axeos Miner Optionen",
+        "description": "Zusätzliche Optionen für Axeos Miner konfigurieren.",
+        "data": {
+          "scan_interval": "Scan-Intervall"
+        }
+      }
+    }
+  }
+}
