@@ -1,58 +1,226 @@
-name: Release
+name: ✅ Release
 
 on:
   push:
+    branches: [main]
     tags:
-      - 'v*.*.*'
-  workflow_dispatch:
+      - 'v*'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1"  # Runs every Monday at 03:00 UTC for automatic dependency updates
 
 jobs:
-  bump-version:
+  dependency_update:
+    name: "🔄 Update Dependencies"
     runs-on: ubuntu-latest
-
     steps:
-    - name: 🛎️ Checkout code
-      uses: actions/checkout@v2
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
 
-    - name: 🐍 Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
-    - name: 📦 Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install bump2version
+      - name: 📦 Install pip-tools
+        run: pip install pip-tools
 
-    - name: 🔢 Bump version
-      run: |
-        bump2version patch --allow-dirty
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: 📄 Ensure requirements.in exists
+        run: |
+          if [ ! -f requirements.in ]; then
+            echo "Generating requirements.in from requirements.txt..."
+            cp requirements.txt requirements.in
+          fi
 
-    - name: 📤 Push changes
-      run: |
-        git push --follow-tags
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: 🔄 Update Dependencies
+        run: pip-compile --upgrade requirements.in
 
-  create-release:
-    needs: bump-version
+      - name: 🔄 Sync Dependencies
+        run: pip-sync
+
+      - name: 🚀 Commit and Push Changes
+        env:
+            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add requirements.txt
+          git diff --cached --quiet || git commit -m "🔄 Auto-update dependencies"
+          git push origin HEAD:main
+
+      - name: 🔀 Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "🔄 Auto-update dependencies"
+          body: "This PR updates dependencies to their latest versions."
+          base: main
+          branch: update-dependencies
+          labels: dependencies, automated
+          assignees: ${{ github.actor }}
+
+  format:
+    name: "🎨 Code Formatting"
     runs-on: ubuntu-latest
-
+    needs: dependency_update
     steps:
-    - name: 🛎️ Checkout code
-      uses: actions/checkout@v2
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
 
-    - name: 📦 Create Release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this release:
-          - Description of changes
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+  lint:
+    name: "🔍 Linting & Static Analysis"
+    runs-on: ubuntu-latest
+    needs: format
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 🔍 Install Linting Tools
+        run: pip install flake8
+
+      - name: 🛠️ Run Linting
+        run: flake8 .
+
+  security_checks:
+    name: "🔒 Security Checks"
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 🔒 Install Security Tools
+        run: pip install bandit safety
+
+      - name: 🔍 Run Bandit (Code Security)
+        run: bandit -r .
+
+      - name: 🛡️ Run Safety (Dependency Security)
+        run: safety check --full-report
+
+      - name: 📦 Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          repo-token: ${{ secrets.GH_TOKEN }}
+          base-ref: ${{ github.event.pull_request.base.ref }}
+          head-ref: ${{ github.event.pull_request.head.ref }}
+
+  secrets_scan:
+    name: "🕵️ Secret Scanning"
+    runs-on: ubuntu-latest
+    needs: security_checks
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🕵️ Install TruffleHog
+        run: pip install trufflehog
+
+      - name: 🔎 Scan for Secrets
+        run: trufflehog filesystem --path . --regex --entropy=True
+
+  tests:
+    name: "✅ Unit Tests"
+    runs-on: ubuntu-latest
+    needs: secrets_scan
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 🧪 Install Dependencies and Test Tools
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: 🏗️ Run Tests
+        run: pytest
+
+  coverage:
+    name: "📊 Code Coverage"
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 📈 Install Coverage Tools
+        run: |
+          pip install -r requirements.txt
+          pip install pytest coverage
+
+      - name: 📊 Run Coverage
+        run: |
+          coverage run -m pytest
+          coverage report -m
+
+  docs:
+    name: "📚 Generate Documentation"
+    runs-on: ubuntu-latest
+    needs: coverage
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 📖 Install Documentation Tools
+        run: |
+          pip install towncrier sphinx sphinx_rtd_theme
+
+      - name: 📜 Generate Changelog
+        run: towncrier --yes
+
+      - name: 📚 Build Documentation
+        run: make -C docs html
+
+  release:
+    name: "🚀 Create Release"
+    runs-on: ubuntu-latest
+    needs: docs
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 🏗️ Build Distribution Packages
+        run: python setup.py sdist bdist_wheel
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
