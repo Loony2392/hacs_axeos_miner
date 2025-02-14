@@ -8,5 +8,5 @@
   "documentation": "https://github.com/Loony2392/hacs_axeos_miner",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Loony2392/ha_hacs_divera_247/issues",
-  "requirements": []
+  "requirements": ["aiohttp"]
 }
