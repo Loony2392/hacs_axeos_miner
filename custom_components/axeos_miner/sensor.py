@@ -1,4 +1,5 @@
-import requests
+import aiohttp
+import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_HOST,
@@ -8,14 +9,11 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfFrequency,
     PERCENTAGE,
-    UnitOfInformation,
     UnitOfTime,
 )
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +57,6 @@ SENSOR_TYPES = {
     "invertscreen": ["Invert Screen", None, "mdi:rotate-3d", None],
     "invertfanpolarity": ["Invert Fan Polarity", None, "mdi:fan", None],
     "autofanspeed": ["Auto Fan Speed", None, "mdi:fan", None],
-    "fanrpm": ["Fan RPM", "rpm", "mdi:fan", None],
     # Add other sensor types as needed
 }
 
@@ -67,23 +64,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Axeos Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
     scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
-    sensors = await hass.async_add_executor_job(fetch_sensors, host, scan_interval)
+    sensors = await fetch_sensors(hass, host, scan_interval)
     async_add_entities(sensors, True)
 
 async def async_unload_entry(hass, entry):
     """Unload Axeos Miner sensors based on a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
-def fetch_sensors(host, scan_interval):
+async def fetch_sensors(hass, host, scan_interval):
     """Fetch sensor data from the Axeos Miner API and create sensor entities."""
     try:
-        response = requests.get(API_URL_TEMPLATE.format(host))
-        response.raise_for_status()
-        data = response.json()
-        hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
-        _LOGGER.debug("Fetched data: %s", data)
-        return [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
-    except requests.exceptions.RequestException as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(API_URL_TEMPLATE.format(host)) as response:
+                response.raise_for_status()
+                data = await response.json()
+                hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
+                _LOGGER.debug("Fetched data: %s", data)
+                return [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+    except aiohttp.ClientError as e:
         _LOGGER.error("Error fetching data from %s: %s", host, e)
         return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
 
@@ -156,18 +154,19 @@ class AxeosMinerSensor(SensorEntity):
             return self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
         return self._state
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
         try:
-            response = requests.get(API_URL_TEMPLATE.format(self._hostname))
-            response.raise_for_status()
-            data = response.json()
-            _LOGGER.debug("Fetched data for %s: %s", self._key, data)
-            self._state = data.get(self._key, "unknown")
-            if self._state is None:
-                self._state = "unknown"
-            if isinstance(self._state, str) and len(self._state) > 255:
-                self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
-        except requests.exceptions.RequestException as e:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(API_URL_TEMPLATE.format(self._hostname)) as response:
+                    response.raise_for_status()
+                    data = await response.json()
+                    _LOGGER.debug("Fetched data for %s: %s", self._key, data)
+                    self._state = data.get(self._key, "unknown")
+                    if self._state is None:
+                        self._state = "unknown"
+                    if isinstance(self._state, str) and len(self._state) > 255:
+                        self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
+        except aiohttp.ClientError as e:
             _LOGGER.error("Error updating sensor %s: %s", self._name, e)
             self._state = f"Error: {e}"

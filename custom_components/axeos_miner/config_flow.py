@@ -59,26 +59,3 @@ class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=options_schema
         )
-
-# Ensure the config entry is passed to the options flow handler
-@config_entries.HANDLERS.register(DOMAIN)
-class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Axeos Miner options."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            self.config_entry.options.update(user_input)
-            return self.async_create_entry(title="", data=self.config_entry.options)
-
-        options_schema = vol.Schema({
-            vol.Optional("scan_interval", default=self.config_entry.options.get("scan_interval", 10)): int,
-        })
-
-        return self.async_show_form(
-            step_id="init", data_schema=options_schema
-        )
