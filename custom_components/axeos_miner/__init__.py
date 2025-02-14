@@ -3,26 +3,27 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import logging
 import aiohttp
+from .const import DOMAIN
 
-DOMAIN = "axeos_miner"
 VERSION = "1.0.0"  # Aktuelle Version der Integration
 UPDATE_URL = "https://api.github.com/repos/Loony2392/hacs_axeos_miner/releases/latest"
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Axeos Miner integration."""
-    hass.data[DOMAIN] = {}
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Axeos Miner component."""
+    hass.data.setdefault(DOMAIN, {})
     await check_for_updates(hass)
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a config entry for Axeos Miner."""
+    """Set up Axeos Miner from a config entry."""
     hass.data[DOMAIN][entry.entry_id] = entry.data
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+        hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     )
     return True
 
