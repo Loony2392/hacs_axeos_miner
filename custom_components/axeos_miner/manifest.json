@@ -1,6 +1,6 @@
 {
   "domain": "axeos_miner",
-  "name": "Axeos Miner",
+  "name": "AxeOS Miner",
   "version": "1.0.0",
   "codeowners": ["@Loony2392"],
   "config_flow": true,
