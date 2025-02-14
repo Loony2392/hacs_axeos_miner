@@ -147,6 +147,8 @@ class AxeosMinerSensor(SensorEntity):
         """Return the native value of the sensor."""
         if isinstance(self._state, (int, float)):
             return round(self._state, 2)  # Runde auf 2 Nachkommastellen
+        if isinstance(self._state, str) and len(self._state) > 255:
+            return self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
         return self._state
 
     def update(self):
