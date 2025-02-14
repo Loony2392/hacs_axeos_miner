@@ -3,6 +3,7 @@ import voluptuous as vol
 import aiohttp
 from .const import DOMAIN
 
+@config_entries.HANDLERS.register(DOMAIN)
 class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Axeos Miner."""
 
@@ -38,7 +39,6 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError:
             return host
 
-@config_entries.HANDLERS.register(DOMAIN)
 class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Axeos Miner options."""
 
