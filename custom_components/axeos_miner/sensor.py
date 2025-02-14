@@ -15,6 +15,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 API_URL_TEMPLATE = "http://{}/api/system/info"
 
@@ -78,8 +81,10 @@ def fetch_sensors(host, scan_interval):
         response.raise_for_status()
         data = response.json()
         hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
+        _LOGGER.debug("Fetched data: %s", data)
         return [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
     except requests.exceptions.RequestException as e:
+        _LOGGER.error("Error fetching data from %s: %s", host, e)
         return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
 
 class AxeosMinerSensor(SensorEntity):
@@ -157,6 +162,10 @@ class AxeosMinerSensor(SensorEntity):
             response = requests.get(API_URL_TEMPLATE.format(self._hostname))
             response.raise_for_status()
             data = response.json()
+            _LOGGER.debug("Fetched data for %s: %s", self._key, data)
             self._state = data.get(self._key, "unknown")
+            if isinstance(self._state, str) and len(self._state) > 255:
+                self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
         except requests.exceptions.RequestException as e:
+            _LOGGER.error("Error updating sensor %s: %s", self._name, e)
             self._state = f"Error: {e}"
