@@ -4,5 +4,5 @@
   "homeassistant": "2021.1.5",
   "render_readme": true,
   "zip_release": false,
-  "category": "integration"
+  "render_changelog": true
 }
