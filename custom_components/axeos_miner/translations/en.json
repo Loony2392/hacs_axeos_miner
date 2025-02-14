@@ -1,10 +1,10 @@
 {
-  "title": "Axeos Miner",
+  "title": "AxeOS Miner",
   "config": {
     "step": {
       "user": {
-        "title": "Configure Axeos Miner",
-        "description": "Set up the Axeos Miner integration.",
+        "title": "Configure AxeOS Miner",
+        "description": "Set up the AxeOS Miner integration.",
         "data": {
           "host": "Host"
         }
@@ -17,8 +17,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Axeos Miner Options",
-        "description": "Configure additional options for Axeos Miner.",
+        "title": "AxeOS Miner Options",
+        "description": "Configure additional options for AxeOS Miner.",
         "data": {
           "scan_interval": "Scan Interval"
         }
