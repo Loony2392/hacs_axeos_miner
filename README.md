@@ -1,6 +1,6 @@
-# Axeos Miner Integration for Home Assistant
+# AxeOS Miner Integration for Home Assistant
 
-This project provides an integration for the Axeos Miner, allowing users to monitor and manage their mining operations through Home Assistant. The integration fetches data from the Axeos Miner API and presents it as sensors within Home Assistant.
+This project provides an integration for the AxeOS Miner, allowing users to monitor and manage their mining operations through Home Assistant. The integration fetches data from the AxeOS Miner API and presents it as sensors within Home Assistant.
 
 ## Features
 
@@ -26,7 +26,7 @@ This project provides an integration for the Axeos Miner, allowing users to moni
 
 ## Usage
 
-Once the integration is installed and configured, you will be able to see the Axeos Miner sensors in your Home Assistant dashboard. You can use these sensors to monitor the performance and health of your mining operations.
+Once the integration is installed and configured, you will be able to see the AxeOS Miner sensors in your Home Assistant dashboard. You can use these sensors to monitor the performance and health of your mining operations.
 
 ## Troubleshooting
 
