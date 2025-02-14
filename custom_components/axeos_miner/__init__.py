@@ -1,5 +1,5 @@
 # This file initializes the package and contains the basic setup logic for the integration.
-# It registers the integration and implements the main logic for communication with the Axeos Miner API.
+# It registers the integration and implements the main logic for communication with the AxeOS Miner API.
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,12 +11,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Axeos Miner component."""
+    """Set up the AxeOS Miner component."""
     hass.data.setdefault(DOMAIN, {})
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Axeos Miner from a config entry."""
+    """Set up AxeOS Miner from a config entry."""
     hass.data[DOMAIN][entry.entry_id] = entry.data
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, ["sensor"])

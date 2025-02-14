@@ -3,8 +3,8 @@ import voluptuous as vol
 import aiohttp
 from .const import DOMAIN
 
-class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Axeos Miner."""
+class AxeOSMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for AxeOS Miner."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -38,8 +38,8 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return host
 
 @config_entries.HANDLERS.register(DOMAIN)
-class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Axeos Miner options."""
+class AxeOSMinerOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle AxeOS Miner options."""
 
     def __init__(self, config_entry):
         """Initialize options flow."""

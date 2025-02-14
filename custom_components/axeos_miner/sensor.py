@@ -62,18 +62,18 @@ SENSOR_TYPES = {
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Axeos Miner sensors based on a config entry."""
+    """Set up AxeOS Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
     scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
     sensors = await fetch_sensors(hass, host, scan_interval)
     async_add_entities(sensors, True)
 
 async def async_unload_entry(hass, entry):
-    """Unload Axeos Miner sensors based on a config entry."""
+    """Unload AxeOS Miner sensors based on a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
 async def fetch_sensors(hass, host, scan_interval):
-    """Fetch sensor data from the Axeos Miner API and create sensor entities."""
+    """Fetch sensor data from the AxeOS Miner API and create sensor entities."""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(API_URL_TEMPLATE.format(host)) as response:
@@ -81,19 +81,19 @@ async def fetch_sensors(hass, host, scan_interval):
                 data = await response.json()
                 hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
                 _LOGGER.debug("Fetched data: %s", data)
-                sensors = [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+                sensors = [AxeOSMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
                 
                 # Füge die Versions- und Changelog-Sensoren hinzu
-                sensors.append(AxeosMinerVersionSensor())
-                sensors.append(AxeosMinerChangelogSensor())
+                sensors.append(AxeOSMinerVersionSensor())
+                sensors.append(AxeOSMinerChangelogSensor())
                 
                 return sensors
     except aiohttp.ClientError as e:
         _LOGGER.error("Error fetching data from %s: %s", host, e)
-        return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
+        return [AxeOSMinerSensor(host, "error", f"Error: {e}", scan_interval)]
 
-class AxeosMinerSensor(SensorEntity):
-    """Representation of an Axeos Miner sensor."""
+class AxeOSMinerSensor(SensorEntity):
+    """Representation of an AxeOS Miner sensor."""
 
     def __init__(self, hostname, key, initial_state, scan_interval):
         """Initialize the sensor."""
@@ -178,12 +178,12 @@ class AxeosMinerSensor(SensorEntity):
             _LOGGER.error("Error updating sensor %s: %s", self._name, e)
             self._state = f"Error: {e}"
 
-class AxeosMinerVersionSensor(SensorEntity):
-    """Representation of the Axeos Miner version sensor."""
+class AxeOSMinerVersionSensor(SensorEntity):
+    """Representation of the AxeOS Miner version sensor."""
 
     def __init__(self):
         """Initialize the version sensor."""
-        self._name = "Axeos Miner Version"
+        self._name = "AxeOS Miner Version"
         self._state = VERSION
         self._icon = "mdi:information"
         self._unique_id = "axeos_miner_version"
@@ -208,12 +208,12 @@ class AxeosMinerVersionSensor(SensorEntity):
         """Return a unique ID for the sensor."""
         return self._unique_id
 
-class AxeosMinerChangelogSensor(SensorEntity):
-    """Representation of the Axeos Miner changelog sensor."""
+class AxeOSMinerChangelogSensor(SensorEntity):
+    """Representation of the AxeOS Miner changelog sensor."""
 
     def __init__(self):
         """Initialize the changelog sensor."""
-        self._name = "Axeos Miner Changelog"
+        self._name = "AxeOS Miner Changelog"
         self._state = None
         self._icon = "mdi:information"
         self._unique_id = "axeos_miner_changelog"
