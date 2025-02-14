@@ -14,7 +14,6 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input["host"]
-            # Hier kannst du eine Funktion hinzufügen, um den Hostnamen vom Gerät abzurufen
             hostname = await self.fetch_hostname(host)
             return self.async_create_entry(title=hostname, data=user_input)
 
