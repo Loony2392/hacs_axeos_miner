@@ -1,7 +1,6 @@
 name: ✅ Release
 
 on:
-  pull_request:
   push:
     branches: [main]
     tags:
@@ -72,6 +71,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+
+      - name: 🎨 Install Code Formatting Tools
+        run: pip install black
+
+      - name: 🎨 Run Code Formatter
+        run: black .
 
   lint:
     name: "🔍 Linting & Static Analysis"
