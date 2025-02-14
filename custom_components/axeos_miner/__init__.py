@@ -7,6 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 import logging
 import aiohttp
 from .const import DOMAIN
+from .options_flow import AxeosMinerOptionsFlowHandler
 
 VERSION = "1.0.0"  # Aktuelle Version der Integration
 UPDATE_URL = "https://api.github.com/repos/Loony2392/hacs_axeos_miner/releases/latest"
@@ -25,6 +26,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     )
+    
+    # Hinzufügen der OptionsFlowHandler-Registrierung
+    hass.data[DOMAIN][entry.entry_id]["options_flow_handler"] = AxeosMinerOptionsFlowHandler(entry)
+    
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
