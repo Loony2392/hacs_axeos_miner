@@ -6,11 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 import logging
 import aiohttp
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_URL, VERSION
 from .options_flow import AxeosMinerOptionsFlowHandler
-
-VERSION = "1.0.0"  # Aktuelle Version der Integration
-UPDATE_URL = "https://api.github.com/repos/Loony2392/hacs_axeos_miner/releases/latest"
 
 _LOGGER = logging.getLogger(__name__)
 

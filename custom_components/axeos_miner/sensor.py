@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_URL, VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +57,7 @@ SENSOR_TYPES = {
     "invertscreen": ["Invert Screen", None, "mdi:rotate-3d", None],
     "invertfanpolarity": ["Invert Fan Polarity", None, "mdi:fan", None],
     "autofanspeed": ["Auto Fan Speed", None, "mdi:fan", None],
+    "changelog": ["Changelog", None, "mdi:information", None],
     # Add other sensor types as needed
 }
 
@@ -80,7 +81,13 @@ async def fetch_sensors(hass, host, scan_interval):
                 data = await response.json()
                 hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
                 _LOGGER.debug("Fetched data: %s", data)
-                return [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+                sensors = [AxeosMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+                
+                # Füge die Versions- und Changelog-Sensoren hinzu
+                sensors.append(AxeosMinerVersionSensor())
+                sensors.append(AxeosMinerChangelogSensor())
+                
+                return sensors
     except aiohttp.ClientError as e:
         _LOGGER.error("Error fetching data from %s: %s", host, e)
         return [AxeosMinerSensor(host, "error", f"Error: {e}", scan_interval)]
@@ -169,4 +176,77 @@ class AxeosMinerSensor(SensorEntity):
                         self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
         except aiohttp.ClientError as e:
             _LOGGER.error("Error updating sensor %s: %s", self._name, e)
+            self._state = f"Error: {e}"
+
+class AxeosMinerVersionSensor(SensorEntity):
+    """Representation of the Axeos Miner version sensor."""
+
+    def __init__(self):
+        """Initialize the version sensor."""
+        self._name = "Axeos Miner Version"
+        self._state = VERSION
+        self._icon = "mdi:information"
+        self._unique_id = "axeos_miner_version"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return self._unique_id
+
+class AxeosMinerChangelogSensor(SensorEntity):
+    """Representation of the Axeos Miner changelog sensor."""
+
+    def __init__(self):
+        """Initialize the changelog sensor."""
+        self._name = "Axeos Miner Changelog"
+        self._state = None
+        self._icon = "mdi:information"
+        self._unique_id = "axeos_miner_changelog"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return self._unique_id
+
+    async def async_update(self):
+        """Fetch new changelog data."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(UPDATE_URL) as response:
+                    response.raise_for_status()
+                    latest_release = await response.json()
+                    changelog = latest_release.get("body", "No changelog available")
+                    self._state = changelog
+        except aiohttp.ClientError as e:
+            _LOGGER.error("Error fetching changelog: %s", e)
             self._state = f"Error: {e}"
