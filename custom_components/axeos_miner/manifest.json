@@ -2,11 +2,11 @@
   "domain": "axeos_miner",
   "name": "Axeos Miner",
   "version": "1.0.0",
-  "documentation": "https://github.com/Loony2392/hacs_axeos_miner",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@Loony2392"],
   "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Loony2392/hacs_axeos_miner",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Loony2392/ha_hacs_divera_247/issues"
+  "issue_tracker": "https://github.com/Loony2392/ha_hacs_divera_247/issues",
+  "requirements": []
 }
