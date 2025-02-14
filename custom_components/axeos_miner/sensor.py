@@ -66,7 +66,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Axeos Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
-    scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
+    scan_interval = entry.options.get("scan_interval", 10)  # Standard-Scan-Intervall ist 60 Sekunden
     sensors = await hass.async_add_executor_job(fetch_sensors, host, scan_interval)
     async_add_entities(sensors, True)
 
@@ -164,6 +164,8 @@ class AxeosMinerSensor(SensorEntity):
             data = response.json()
             _LOGGER.debug("Fetched data for %s: %s", self._key, data)
             self._state = data.get(self._key, "unknown")
+            if self._state is None:
+                self._state = "unknown"
             if isinstance(self._state, str) and len(self._state) > 255:
                 self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
         except requests.exceptions.RequestException as e:
