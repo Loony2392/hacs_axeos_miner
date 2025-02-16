@@ -79,8 +79,9 @@ async def fetch_sensors(hass, host, scan_interval):
             async with session.get(API_URL_TEMPLATE.format(host)) as response:
                 response.raise_for_status()
                 data = await response.json()
+                hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder die IP-Adresse
                 _LOGGER.debug("Fetched data: %s", data)
-                sensors = [AxeOSMinerSensor(host, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+                sensors = [AxeOSMinerSensor(hostname, key, value, scan_interval, host) for key, value in data.items() if key in SENSOR_TYPES]
                 
                 # Füge die Versions- und Changelog-Sensoren hinzu
                 sensors.append(AxeOSMinerVersionSensor())
@@ -89,24 +90,25 @@ async def fetch_sensors(hass, host, scan_interval):
                 return sensors
     except aiohttp.ClientError as e:
         _LOGGER.error("Error fetching data from %s: %s", host, e)
-        return [AxeOSMinerSensor(host, "error", f"Error: {e}", scan_interval)]
+        return [AxeOSMinerSensor(host, "error", f"Error: {e}", scan_interval, host)]
     except Exception as e:
         _LOGGER.error("Unexpected error: %s", e)
-        return [AxeOSMinerSensor(host, "error", f"Unexpected error: {e}", scan_interval)]
+        return [AxeOSMinerSensor(host, "error", f"Unexpected error: {e}", scan_interval, host)]
 
 class AxeOSMinerSensor(SensorEntity):
     """Representation of an AxeOS Miner sensor."""
 
-    def __init__(self, hostname, key, initial_state, scan_interval):
+    def __init__(self, hostname, key, initial_state, scan_interval, host):
         """Initialize the sensor."""
         self._hostname = hostname
+        self._host = host
         self._key = key
         self._name = f"{hostname} {SENSOR_TYPES[key][0]}"
         self._state = initial_state
         self._unit = SENSOR_TYPES[key][1]
         self._icon = SENSOR_TYPES[key][2]
         self._device_class = SENSOR_TYPES[key][3]
-        self._unique_id = f"{hostname}_{key}"
+        self._unique_id = f"{host}_{key}"
         self._scan_interval = scan_interval
 
     @property
@@ -114,7 +116,7 @@ class AxeOSMinerSensor(SensorEntity):
         """Return the name of the sensor."""
         return self._name
 
-    @property
+    @propertys
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -167,7 +169,7 @@ class AxeOSMinerSensor(SensorEntity):
         """Fetch new state data for the sensor."""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(API_URL_TEMPLATE.format(self._hostname)) as response:
+                async with session.get(API_URL_TEMPLATE.format(self._host)) as response:
                     response.raise_for_status()
                     data = await response.json()
                     _LOGGER.debug("Fetched data for %s: %s", self._key, data)
