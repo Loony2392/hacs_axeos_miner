@@ -91,6 +91,9 @@ async def fetch_sensors(hass, host, scan_interval):
     except aiohttp.ClientError as e:
         _LOGGER.error("Error fetching data from %s: %s", host, e)
         return [AxeOSMinerSensor(host, "error", f"Error: {e}", scan_interval)]
+    except Exception as e:
+        _LOGGER.error("Unexpected error: %s", e)
+        return [AxeOSMinerSensor(host, "error", f"Unexpected error: {e}", scan_interval)]
 
 class AxeOSMinerSensor(SensorEntity):
     """Representation of an AxeOS Miner sensor."""
