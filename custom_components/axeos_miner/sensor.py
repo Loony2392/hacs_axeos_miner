@@ -116,7 +116,7 @@ class AxeOSMinerSensor(SensorEntity):
         """Return the name of the sensor."""
         return self._name
 
-    @propertys
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
