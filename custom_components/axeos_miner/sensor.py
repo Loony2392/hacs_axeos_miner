@@ -79,9 +79,8 @@ async def fetch_sensors(hass, host, scan_interval):
             async with session.get(API_URL_TEMPLATE.format(host)) as response:
                 response.raise_for_status()
                 data = await response.json()
-                hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder den Hostnamen aus der Konfiguration
                 _LOGGER.debug("Fetched data: %s", data)
-                sensors = [AxeOSMinerSensor(hostname, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
+                sensors = [AxeOSMinerSensor(host, key, value, scan_interval) for key, value in data.items() if key in SENSOR_TYPES]
                 
                 # Füge die Versions- und Changelog-Sensoren hinzu
                 sensors.append(AxeOSMinerVersionSensor())
