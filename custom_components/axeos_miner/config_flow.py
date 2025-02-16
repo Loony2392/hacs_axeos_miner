@@ -15,7 +15,10 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input["host"]
             hostname = await self.fetch_hostname(host)
-            return self.async_create_entry(title=hostname, data=user_input)
+            if hostname:
+                return self.async_create_entry(title=hostname, data=user_input)
+            else:
+                errors["base"] = "cannot_connect"
 
         data_schema = vol.Schema({
             vol.Required("host"): str,
@@ -35,4 +38,4 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data = await response.json()
                     return data.get("hostname", host)
         except aiohttp.ClientError:
-            return host
+            return None
