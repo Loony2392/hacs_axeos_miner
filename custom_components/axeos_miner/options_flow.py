@@ -1,6 +1,7 @@
 from homeassistant import config_entries
 import voluptuous as vol
 
+
 class AxeosMinerOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
         self.config_entry = config_entry

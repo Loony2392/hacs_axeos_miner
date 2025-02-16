@@ -3,6 +3,7 @@ import voluptuous as vol
 import aiohttp
 from .const import DOMAIN
 
+
 class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Axeos Miner."""
 
@@ -28,6 +29,7 @@ class AxeosMinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
 
     async def fetch_hostname(self, host):
         """Fetch the hostname from the device."""

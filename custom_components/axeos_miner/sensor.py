@@ -12,7 +12,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity, UpdateFailed
 from .const import DOMAIN, UPDATE_URL, VERSION
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,55 +61,55 @@ SENSOR_TYPES = {
     # Add other sensor types as needed
 }
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up AxeOS Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
     scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
-    sensors = await fetch_sensors(hass, host, scan_interval)
+
+    coordinator = AxeOSMinerDataUpdateCoordinator(hass, host, scan_interval)
+    await coordinator.async_config_entry_first_refresh()
+
+    sensors = [AxeOSMinerSensor(coordinator, key) for key in SENSOR_TYPES]
     async_add_entities(sensors, True)
 
 async def async_unload_entry(hass, entry):
     """Unload AxeOS Miner sensors based on a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
-async def fetch_sensors(hass, host, scan_interval):
-    """Fetch sensor data from the AxeOS Miner API and create sensor entities."""
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(API_URL_TEMPLATE.format(host)) as response:
-                response.raise_for_status()
-                data = await response.json()
-                hostname = data.get("hostname", host)  # Verwende den Hostnamen aus den Daten oder die IP-Adresse
-                _LOGGER.debug("Fetched data: %s", data)
-                sensors = [AxeOSMinerSensor(hostname, key, value, scan_interval, host) for key, value in data.items() if key in SENSOR_TYPES]
-                
-                # Füge die Versions- und Changelog-Sensoren hinzu
-                sensors.append(AxeOSMinerVersionSensor())
-                sensors.append(AxeOSMinerChangelogSensor())
-                
-                return sensors
-    except aiohttp.ClientError as e:
-        _LOGGER.error("Error fetching data from %s: %s", host, e)
-        return [AxeOSMinerSensor(host, "error", f"Error: {e}", scan_interval, host)]
-    except Exception as e:
-        _LOGGER.error("Unexpected error: %s", e)
-        return [AxeOSMinerSensor(host, "error", f"Unexpected error: {e}", scan_interval, host)]
 
-class AxeOSMinerSensor(SensorEntity):
+class AxeOSMinerDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching AxeOS Miner data."""
+
+    def __init__(self, hass, host, scan_interval):
+        """Initialize."""
+        self.host = host
+        self.api_url = API_URL_TEMPLATE.format(host)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
+
+    async def _async_update_data(self):
+        """Fetch data from AxeOS Miner."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.api_url) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientError as e:
+            raise UpdateFailed(f"Error fetching data: {e}")
+
+
+class AxeOSMinerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an AxeOS Miner sensor."""
 
-    def __init__(self, hostname, key, initial_state, scan_interval, host):
+    def __init__(self, coordinator, key):
         """Initialize the sensor."""
-        self._hostname = hostname
-        self._host = host
+        super().__init__(coordinator)
         self._key = key
-        self._name = f"{hostname} {SENSOR_TYPES[key][0]}"
-        self._state = initial_state
+        self._name = f"{coordinator.data.get('hostname', coordinator.host)} {SENSOR_TYPES[key][0]}"
         self._unit = SENSOR_TYPES[key][1]
         self._icon = SENSOR_TYPES[key][2]
         self._device_class = SENSOR_TYPES[key][3]
-        self._unique_id = f"{host}_{key}"
-        self._scan_interval = scan_interval
+        self._unique_id = f"{coordinator.host}_{key}"
 
     @property
     def name(self):
@@ -119,7 +119,7 @@ class AxeOSMinerSensor(SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.coordinator.data.get(self._key)
 
     @property
     def unit_of_measurement(self):
@@ -137,16 +137,6 @@ class AxeOSMinerSensor(SensorEntity):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def scan_interval(self):
-        """Return the scan interval."""
-        return self._scan_interval
-
-    @property
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
@@ -159,98 +149,9 @@ class AxeOSMinerSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the native value of the sensor."""
-        if isinstance(self._state, (int, float)):
-            return round(self._state, 2)  # Runde auf 2 Nachkommastellen
-        if isinstance(self._state, str) and len(self._state) > 255:
-            return self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
-        return self._state
-
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(API_URL_TEMPLATE.format(self._host)) as response:
-                    response.raise_for_status()
-                    data = await response.json()
-                    _LOGGER.debug("Fetched data for %s: %s", self._key, data)
-                    self._state = data.get(self._key, "unknown")
-                    if self._state is None:
-                        self._state = "unknown"
-                    if isinstance(self._state, str) and len(self._state) > 255:
-                        self._state = self._state[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
-        except aiohttp.ClientError as e:
-            _LOGGER.error("Error updating sensor %s: %s", self._name, e)
-            self._state = f"Error: {e}"
-
-class AxeOSMinerVersionSensor(SensorEntity):
-    """Representation of the AxeOS Miner version sensor."""
-
-    def __init__(self):
-        """Initialize the version sensor."""
-        self._name = "AxeOS Miner Version"
-        self._state = VERSION
-        self._icon = "mdi:information"
-        self._unique_id = "axeos_miner_version"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
-    def unique_id(self):
-        """Return a unique ID for the sensor."""
-        return self._unique_id
-
-class AxeOSMinerChangelogSensor(SensorEntity):
-    """Representation of the AxeOS Miner changelog sensor."""
-
-    def __init__(self):
-        """Initialize the changelog sensor."""
-        self._name = "AxeOS Miner Changelog"
-        self._state = None
-        self._icon = "mdi:information"
-        self._unique_id = "axeos_miner_changelog"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
-    def unique_id(self):
-        """Return a unique ID for the sensor."""
-        return self._unique_id
-
-    async def async_update(self):
-        """Fetch new changelog data."""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(UPDATE_URL) as response:
-                    response.raise_for_status()
-                    latest_release = await response.json()
-                    changelog = latest_release.get("body", "No changelog available")
-                    self._state = changelog
-        except aiohttp.ClientError as e:
-            _LOGGER.error("Error fetching changelog: %s", e)
-            self._state = f"Error: {e}"
+        value = self.coordinator.data.get(self._key)
+        if isinstance(value, (int, float)):
+            return round(value, 2)  # Runde auf 2 Nachkommastellen
+        if isinstance(value, str) and len(value) > 255:
+            return value[:255]  # Begrenze die Länge des Zustands auf 255 Zeichen
+        return value
