@@ -6,10 +6,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 import logging
 import aiohttp
+import voluptuous as vol
+from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the AxeOS Miner component."""
