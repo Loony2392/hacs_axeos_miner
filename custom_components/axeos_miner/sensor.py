@@ -1,5 +1,6 @@
 import aiohttp
 import logging
+from datetime import timedelta
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_HOST,
@@ -65,7 +66,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up AxeOS Miner sensors based on a config entry."""
     host = entry.data[CONF_HOST]
-    scan_interval = entry.options.get("scan_interval", 60)  # Standard-Scan-Intervall ist 60 Sekunden
+    scan_interval = timedelta(seconds=entry.options.get("scan_interval", 60))  # Standard-Scan-Intervall ist 60 Sekunden
 
     coordinator = AxeOSMinerDataUpdateCoordinator(hass, host, scan_interval)
     await coordinator.async_config_entry_first_refresh()
@@ -81,11 +82,11 @@ async def async_unload_entry(hass, entry):
 class AxeOSMinerDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching AxeOS Miner data."""
 
-    def __init__(self, hass, host, scan_interval):
+    def __init__(self, hass, host, update_interval):
         """Initialize."""
         self.host = host
         self.api_url = API_URL_TEMPLATE.format(host)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     async def _async_update_data(self):
         """Fetch data from AxeOS Miner."""
