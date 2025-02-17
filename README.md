@@ -1,4 +1,6 @@
-# ![AxeOS Miner](logo_256x256.png) AxeOS Miner Integration for Home Assistant
+# ![AxeOS Miner](logo_256x256.png) 
+
+# AxeOS Miner Integration for Home Assistant
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Loony2392/hacs_axeos_miner)](https://github.com/Loony2392/hacs_axeos_miner/releases)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
@@ -10,7 +12,7 @@ This project provides an integration for the AxeOS Miner, allowing users to moni
 ## Features
 
 - 📊 **Real-time monitoring** of mining performance
-- ⚡ **Access to various metrics** such as power consumption, voltage, and temperature
+- ⚡ **Access to various metrics** such as power consumption, voltage, hashrate and temperature
 - 🛠️ **Easy integration** with Home Assistant
 
 ## Installation
