@@ -28,20 +28,32 @@ jobs:
 
       - name: 📄 Ensure requirements.in exists
         run: |
-          if [ ! -f requirements.in ]; then
+          if [ -f requirements.txt ]; then
             echo "Generating requirements.in from requirements.txt..."
             cp requirements.txt requirements.in
+          else
+            echo "requirements.txt not found, skipping generation of requirements.in"
           fi
 
       - name: 🔄 Update Dependencies
-        run: pip-compile --upgrade requirements.in
+        run: |
+          if [ -f requirements.in ]; then
+            pip-compile --upgrade requirements.in
+          else
+            echo "requirements.in not found, skipping dependency update"
+          fi
 
       - name: 🔄 Sync Dependencies
-        run: pip-sync
+        run: |
+          if [ -f requirements.in ]; then
+            pip-sync
+          else
+            echo "requirements.in not found, skipping dependency sync"
+          fi
 
       - name: 🚀 Commit and Push Changes
         env:
-            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
